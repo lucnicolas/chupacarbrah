@@ -278,7 +278,7 @@ def run():
                 car_uuid = _get_car_uuid()
                 timestamp = str(datetime.datetime.now())
                 #gps_data = _read_gps_data()
-                gps_data = null
+                gps_data = "test"
                 log = {"timestamp": timestamp, "GPS": gps_data, "speed": speed, "rpm": rpm, "temperature": intake_air_temperature}
                 data = {"car_uuid": car_uuid, "log": log}
                 if exfiltrate_data(data):
