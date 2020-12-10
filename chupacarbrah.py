@@ -270,6 +270,7 @@ def run():
                                             _output_message("Unable to parse response: {}.".format(response.data))
                         except can.CanError:
                             _output_message("CAN error")
+                            break;
 
             end = time.time()
             hours, rem = divmod(end - start, 3600)
